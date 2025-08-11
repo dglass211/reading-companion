@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "ReadingCompanion",
+    "slug": "ReadingCompanion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dglass211.ReadingCompanion",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "We need microphone access to talk to your reading companion.",
+        "NSCameraUsageDescription": "Camera may be used for future features.",
+        "UIBackgroundModes": [
+          "voip"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "@config-plugins/react-native-webrtc",
+      "@daily-co/config-plugin-rn-daily-js",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          },
+          "android": {
+            "minSdkVersion": 24
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "EXPO_PUBLIC_VAPI_KEY": "6ea401e8-9a9e-4918-b3a5-d16b911590af"
+    }
+  }
+}
