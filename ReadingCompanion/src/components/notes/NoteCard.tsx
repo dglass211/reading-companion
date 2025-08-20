@@ -6,22 +6,29 @@ export interface NoteCardProps {
   id: string;
   title: string;
   body: string;
-  bookTitle?: string | null;
-  author?: string | null;
+  createdAt: number;
   chapterNumber?: number | null;
   selected?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
 }
 
-export const NoteCard: React.FC<NoteCardProps> = ({ id, title, body, bookTitle, author, chapterNumber, selected, onPress, onLongPress }) => {
+function formatDate(ts: number): string {
+  try {
+    const d = new Date(ts * 1000);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+
+export const NoteCard: React.FC<NoteCardProps> = ({ id, title, body, createdAt, chapterNumber, selected, onPress, onLongPress }) => {
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }, selected && styles.selected] }>
       <Text style={styles.title} numberOfLines={1}>{title}</Text>
       <Text style={styles.body} numberOfLines={6}>{body}</Text>
       <View style={styles.chipsRow}>
-        {!!bookTitle && <Text style={styles.chip}>{bookTitle}</Text>}
-        {!!author && <Text style={styles.chip}>{author}</Text>}
+        <Text style={styles.chip}>{formatDate(createdAt)}</Text>
         {chapterNumber != null && <Text style={styles.chip}>{`Ch ${chapterNumber}`}</Text>}
       </View>
     </Pressable>
@@ -35,7 +42,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: theme.colors.border,
-    marginBottom: 12,
+    marginVertical: 6,
   },
   selected: { borderColor: theme.colors.primary },
   title: {

@@ -10,6 +10,9 @@ export interface VoiceState {
   bookTitle: string | null;
   author: string | null;
   chapter: number;
+  currentConversationId?: string | null;
+  turnIndex: number;
+  pendingQuestion?: { text: string; questionType?: string; topic?: string } | null;
   isRecording: boolean;
   status: VoiceStatus;
   statusMessage?: string;
@@ -24,6 +27,10 @@ export interface VoiceState {
   setChapter: (n: number) => void;
   nextChapter: () => void;
   prevChapter: () => void;
+  startConversation: (id: string) => void;
+  incrementTurnIndex: () => void;
+  setPendingQuestion: (q: { text: string; questionType?: string; topic?: string } | null) => void;
+  clearPendingQuestion: () => void;
 
   requestMicrophonePermission: () => Promise<boolean>;
   startRecording: () => Promise<void>;
@@ -54,6 +61,9 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   bookTitle: null,
   author: null,
   chapter: 3,
+  currentConversationId: null,
+  turnIndex: 0,
+  pendingQuestion: null,
   isRecording: false,
   status: 'idle',
   levels: emptyLevels(),
@@ -64,6 +74,11 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   setChapter: (n) => set({ chapter: Math.max(1, Math.floor(n)) }),
   nextChapter: () => set((s) => ({ chapter: s.chapter + 1 })),
   prevChapter: () => set((s) => ({ chapter: Math.max(1, s.chapter - 1) })),
+
+  startConversation: (id: string) => set({ currentConversationId: id, turnIndex: 0 }),
+  incrementTurnIndex: () => set((s) => ({ turnIndex: s.turnIndex + 1 })),
+  setPendingQuestion: (q) => set({ pendingQuestion: q }),
+  clearPendingQuestion: () => set({ pendingQuestion: null }),
 
   requestMicrophonePermission: async () => {
     const cur = await Audio.getPermissionsAsync();
