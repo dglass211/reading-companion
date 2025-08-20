@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, Text, View, Pressable, Alert, ScrollView } from 'react-native';
-import { LinenBackground } from '../components/LinenBackground';
+import LinenBackground from '../components/LinenBackground';
 import { theme } from '../theme';
 import { BookListItem } from '../components/BookListItem';
 import { SectionCard } from '../components/SectionCard';
@@ -65,9 +65,16 @@ export const BooksScreen: React.FC = () => {
 
         <ScrollView contentContainerStyle={{ paddingBottom: 32}}>
           <View style={styles.sectionWrap}>
-            <Text style={styles.sectionTitle}>current book</Text>
             <View style={styles.cardWrap}>
               <SectionCard>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionCardTitle}>current book</Text>
+                  {current && (
+                    <Pressable onPress={() => navigation.navigate('AddBook')} hitSlop={8} style={styles.replaceInlineBtn}>
+                      <IconReplace size={22} color="#66A0C8" />
+                    </Pressable>
+                  )}
+                </View>
                 {current ? (
                   <BookListItem
                     title={current.title}
@@ -79,17 +86,14 @@ export const BooksScreen: React.FC = () => {
                   <Text style={styles.emptyText}>No current book</Text>
                 )}
               </SectionCard>
-              {current && (
-                <Pressable onPress={() => navigation.navigate('AddBook')} style={styles.replaceBtn} hitSlop={6}>
-                  <IconReplace size={18} color="#66A0C8" />
-                </Pressable>
-              )}
             </View>
           </View>
 
           <View style={styles.sectionWrap}>
-            <Text style={styles.sectionTitle}>my library</Text>
             <SectionCard>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionCardTitle}>my library</Text>
+              </View>
               {library.map((item) => (
                 <BookListItem
                   key={item.id}
@@ -138,10 +142,8 @@ const styles = StyleSheet.create({
   sectionWrap: { paddingHorizontal: 16, marginTop: 24 },
   sectionTitle: { color: theme.colors.textPrimary, fontWeight: '700', marginBottom: 8 },
   emptyText: { color: theme.colors.textSecondary },
-  replaceBtn: {
-    position: 'absolute',
-    right: 24,
-    top: 32 + 12 + 44, // header top (32) + header bottom padding (12) + approx title height
-  },
+  sectionCardTitle: { color: theme.colors.textPrimary, fontWeight: '700', marginBottom: 12 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  replaceInlineBtn: { padding: 4 },
   cardWrap: { position: 'relative' },
 });

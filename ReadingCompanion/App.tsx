@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { RootNavigation } from './src/navigation/RootTabs';
-import { LinenBackground } from './src/components/LinenBackground';
+import LinenBackground from './src/components/LinenBackground';
 import { initDb } from './src/data/sqlite';
 
 export default function App() {

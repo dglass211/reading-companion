@@ -65,6 +65,7 @@ function Tabs() {
         component={VoiceScreen}
         options={{
           title: 'Voice',
+          headerShown: false,
           tabBarIcon: ({ focused, color }) => (
             <IconMic size={24} color={focused ? theme.colors.textPrimary : theme.colors.tabInactive} />
           ),
@@ -75,6 +76,7 @@ function Tabs() {
         component={NotesScreen}
         options={{
           title: 'Notes',
+          headerShown: false,
           tabBarIcon: ({ focused, color }) => (
             <IconNotes size={24} color={focused ? theme.colors.textPrimary : theme.colors.tabInactive} />
           ),

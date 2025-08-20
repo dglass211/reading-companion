@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { LinenBackground } from '../components/LinenBackground';
+import LinenBackground from '../components/LinenBackground';
 import { SearchBar } from '../components/SearchBar';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { searchBooks, BookSearchResult } from '../services/openLibrary';
