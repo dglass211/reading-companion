@@ -8,7 +8,7 @@ import { VoiceScreen } from '../screens/VoiceScreen';
 import { NotesScreen } from '../screens/NotesScreen';
 import { AddBookScreen } from '../screens/AddBookScreen';
 import { theme } from '../theme';
-import { IconBooks, IconMic, IconNotes } from '../components/icons/TabIcons';
+import { IconBooks, IconMic, IconNotes, IconProfile } from '../components/icons/TabIcons';
 import { useAuth } from '../auth/AuthContext';
 import { View, Text, Pressable } from 'react-native';
 
@@ -44,9 +44,25 @@ export function Tabs() {
         headerTitleAlign: 'center',
         headerStyle: { backgroundColor: 'transparent' },
         headerTitleStyle: { color: theme.colors.textPrimary },
-        tabBarStyle: { backgroundColor: 'rgba(0,0,0,0.2)', borderTopColor: theme.colors.border },
-        tabBarActiveTintColor: theme.colors.textPrimary,
-        tabBarInactiveTintColor: theme.colors.tabInactive,
+        tabBarStyle: {
+          backgroundColor: 'transparent',
+          borderTopColor: 'transparent',
+          borderTopWidth: 0,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          marginHorizontal: 16,
+          paddingTop: 4,
+          // Absolute + transparent so no second background shows through
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          overflow: 'hidden',
+        },
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24 }} />
+        ),
+        tabBarActiveTintColor: '#2D2E2D',
+        tabBarInactiveTintColor: '#6A6B6A',
         sceneStyle: { backgroundColor: 'transparent' },
       }}
     >
@@ -56,8 +72,8 @@ export function Tabs() {
         options={{
           title: 'Books',
           headerShown: false,
-          tabBarIcon: ({ focused, color }) => (
-            <IconBooks size={24} color={focused ? theme.colors.textPrimary : theme.colors.tabInactive} />
+          tabBarIcon: ({ color }) => (
+            <IconBooks size={24} color={color} />
           ),
         }}
       />
@@ -67,8 +83,8 @@ export function Tabs() {
         options={{
           title: 'Voice',
           headerShown: false,
-          tabBarIcon: ({ focused, color }) => (
-            <IconMic size={24} color={focused ? theme.colors.textPrimary : theme.colors.tabInactive} />
+          tabBarIcon: ({ color }) => (
+            <IconMic size={24} color={color} />
           ),
         }}
       />
@@ -78,8 +94,8 @@ export function Tabs() {
         options={{
           title: 'Notes',
           headerShown: false,
-          tabBarIcon: ({ focused, color }) => (
-            <IconNotes size={24} color={focused ? theme.colors.textPrimary : theme.colors.tabInactive} />
+          tabBarIcon: ({ color }) => (
+            <IconNotes size={24} color={color} />
           ),
         }}
       />
@@ -89,9 +105,7 @@ export function Tabs() {
         options={{
           title: 'Account',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <Text style={{ color: focused ? theme.colors.textPrimary : theme.colors.tabInactive }}>⚙︎</Text>
-          ),
+          tabBarIcon: ({ color }) => <IconProfile size={24} color={color} />,
         }}
       />
     </Tab.Navigator>
