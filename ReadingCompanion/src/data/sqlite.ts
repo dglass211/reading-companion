@@ -111,4 +111,33 @@ export async function initDb() {
   } catch (e) {
     console.warn('[sqlite] notes schema migration skipped/failed:', e);
   }
+
+  // Migration: add userId to books and notes, backfill to 'local', and index by userId
+  try {
+    const booksCols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(books)`);
+    const hasBooksUser = booksCols.some((c) => c.name === 'userId');
+    if (!hasBooksUser) {
+      await db.execAsync(`ALTER TABLE books ADD COLUMN userId TEXT`);
+      await db.execAsync(`UPDATE books SET userId = 'local' WHERE userId IS NULL`);
+      await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_books_user ON books(userId)`);
+    } else {
+      await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_books_user ON books(userId)`);
+    }
+  } catch (e) {
+    console.warn('[sqlite] books userId migration skipped/failed:', e);
+  }
+
+  try {
+    const notesCols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(notes)`);
+    const hasNotesUser = notesCols.some((c) => c.name === 'userId');
+    if (!hasNotesUser) {
+      await db.execAsync(`ALTER TABLE notes ADD COLUMN userId TEXT`);
+      await db.execAsync(`UPDATE notes SET userId = 'local' WHERE userId IS NULL`);
+      await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(userId)`);
+    } else {
+      await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(userId)`);
+    }
+  } catch (e) {
+    console.warn('[sqlite] notes userId migration skipped/failed:', e);
+  }
 }

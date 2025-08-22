@@ -14,6 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.dglass211.ReadingCompanion",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "We need microphone access to talk to your reading companion.",
@@ -37,6 +38,7 @@
       "expo-sqlite",
       "@config-plugins/react-native-webrtc",
       "@daily-co/config-plugin-rn-daily-js",
+      "expo-apple-authentication",
       [
         "expo-build-properties",
         {
@@ -47,7 +49,8 @@
             "minSdkVersion": 24
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "EXPO_PUBLIC_VAPI_KEY": "6ea401e8-9a9e-4918-b3a5-d16b911590af"
