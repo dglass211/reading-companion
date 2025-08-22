@@ -1,4 +1,5 @@
 import { getDb } from '../data/sqlite';
+import { getCurrentUser } from '../auth/auth';
 
 export type SavedNote = {
   id: string;
@@ -31,12 +32,14 @@ function parseTags(csv: string | null | undefined): string[] {
 
 export async function saveNote(n: SavedNote): Promise<void> {
   const db = await getDb();
+  const user = await getCurrentUser();
+  const userId = user?.id ?? 'local';
   try {
     await db.runAsync(
     `INSERT INTO notes (
       id, conversationId, turnIndex, bookId, bookTitle, author,
-      chapterNumber, chapterName, question, answer, questionType, topic, tags, createdAt
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      chapterNumber, chapterName, question, answer, questionType, topic, tags, createdAt, userId
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(id) DO UPDATE SET
       conversationId=excluded.conversationId,
       turnIndex=excluded.turnIndex,
@@ -49,7 +52,8 @@ export async function saveNote(n: SavedNote): Promise<void> {
       answer=excluded.answer,
       questionType=excluded.questionType,
       topic=excluded.topic,
-      tags=excluded.tags
+      tags=excluded.tags,
+      userId=excluded.userId
     `,
     n.id,
     n.conversationId ?? null,
@@ -65,6 +69,7 @@ export async function saveNote(n: SavedNote): Promise<void> {
     n.topic ?? null,
     csvFrom(n.tags),
     n.createdAt,
+    userId,
   );
   } catch (e: any) {
     // Treat unique-turn conflicts as a no-op to make saves idempotent
@@ -80,8 +85,12 @@ export async function saveNote(n: SavedNote): Promise<void> {
 
 export async function getNotes(params?: { bookId?: string; chapterNumber?: number; q?: string }): Promise<SavedNote[]> {
   const db = await getDb();
+  const user = await getCurrentUser();
+  const userId = user?.id ?? 'local';
   const where: string[] = [];
   const args: any[] = [];
+  where.push('userId = ?');
+  args.push(userId);
   if (params?.bookId) { where.push('bookId = ?'); args.push(params.bookId); }
   if (params?.chapterNumber != null) { where.push('chapterNumber = ?'); args.push(params.chapterNumber); }
   if (params?.q && params.q.trim()) {

@@ -3,13 +3,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
 import { BooksScreen } from '../screens/BooksScreen';
 import { VoiceScreen } from '../screens/VoiceScreen';
 import { NotesScreen } from '../screens/NotesScreen';
 import { AddBookScreen } from '../screens/AddBookScreen';
 import { theme } from '../theme';
 import { IconBooks, IconMic, IconNotes } from '../components/icons/TabIcons';
+import { useAuth } from '../auth/AuthContext';
+import { View, Text, Pressable } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -36,7 +37,7 @@ function BooksStack() {
   );
 }
 
-function Tabs() {
+export function Tabs() {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -82,6 +83,17 @@ function Tabs() {
           ),
         }}
       />
+      <Tab.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{
+          title: 'Account',
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ color: focused ? theme.colors.textPrimary : theme.colors.tabInactive }}>⚙︎</Text>
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -99,5 +111,22 @@ export function RootNavigation() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+function AccountScreen() {
+  const { user, signOut } = useAuth();
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: theme.colors.textPrimary, marginBottom: 12 }}>
+        {user ? `Signed in as ${user.email ?? user.name ?? user.id}` : 'Not signed in'}
+      </Text>
+      <Pressable
+        onPress={signOut}
+        style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 8 }}
+      >
+        <Text style={{ color: '#333' }}>Sign out</Text>
+      </Pressable>
+    </View>
   );
 }
