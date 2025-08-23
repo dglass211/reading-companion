@@ -5,13 +5,15 @@ import LinenBackground from '../components/LinenBackground';
 import { SearchBar } from '../components/SearchBar';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { searchBooks, BookSearchResult } from '../services/openLibrary';
-import { addBook } from '../data/booksDal';
+import { upsertBook } from '../data/db';
+import { useAuth } from '../auth/AuthContext';
 import { BookListItem } from '../components/BookListItem';
 import { IconBack, IconPlus } from '../components/icons/TabIcons';
 import { useNavigation } from '@react-navigation/native';
 
 export const AddBookScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const debounced = useDebouncedValue(query, 300);
   const [results, setResults] = useState<BookSearchResult[]>([]);
@@ -36,8 +38,21 @@ export const AddBookScreen: React.FC = () => {
   }, [debounced]);
 
   async function handleAdd(item: BookSearchResult) {
-    await addBook({ id: item.id, title: item.title, author: item.author, coverUrl: item.coverUrl });
-    navigation.goBack();
+
+    try {
+      await upsertBook({
+        title: item.title,
+        author: item.author,
+        openlibrary_id: item.id,
+        cover_url: item.coverUrl ?? null,
+      }, { userId: user?.id });
+      navigation.goBack();
+    } catch (e: any) {
+      console.warn('[AddBook] upsert failed:', e?.message ?? e);
+      // Fallback UX: notify and keep user on screen
+      // eslint-disable-next-line no-alert
+      alert(`Failed to add book: ${e?.message ?? 'unknown error'}`);
+    }
   }
 
   return (

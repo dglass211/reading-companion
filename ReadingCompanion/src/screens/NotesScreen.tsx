@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 import LinenBackground from '../components/LinenBackground';
 import { theme } from '../theme';
-import { getNotes, SavedNote, saveNote } from '../db/notes';
+import { listNotesByBook, Note } from '../data/db';
 import { NoteCard } from '../components/notes/NoteCard';
 import { IconRefresh } from '../components/icons/TabIcons';
 import { NoteEditor } from '../components/notes/NoteEditor';
@@ -16,48 +16,20 @@ import { NoteEditor } from '../components/notes/NoteEditor';
 export const NotesScreen: React.FC = () => {
   const [q, setQ] = useState('');
   // removed dedicated filters; one search field handles all
-  const [items, setItems] = useState<SavedNote[]>([]);
+  const [items, setItems] = useState<Note[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [editor, setEditor] = useState<{ visible: boolean; note: SavedNote | null }>({ visible: false, note: null });
+  const [editor, setEditor] = useState<{ visible: boolean; note: Note | null }>({ visible: false, note: null });
   const [seeded, setSeeded] = useState(false);
 
   async function refresh() {
-    const rows = await getNotes({ q: q || undefined });
+    // Supabase notes listing; basic search can be added with ilike filters later
+    const rows = await listNotesByBook();
     setItems(rows);
   }
 
   useEffect(() => { refresh(); }, [q]);
   useFocusEffect(useCallback(() => { refresh(); }, []));
 
-  // One-time seed to help verify the UI is wired up
-  useEffect(() => {
-    (async () => {
-      if (seeded) return;
-      const existing = await getNotes();
-      if (existing.length === 0) {
-        const demo: SavedNote = {
-          id: `demo-${Date.now()}`,
-          conversationId: 'demo-conv-1',
-          turnIndex: 0,
-          bookId: 'demo-book-1',
-          bookTitle: 'Actionable Gamification',
-          author: 'Yu-kai Chou',
-          chapterNumber: 3,
-          question: 'What stood out most from Chapter 3?',
-          answer: 'Sample answer so you can confirm notes are rendering correctly.',
-          questionType: 'broad',
-          topic: 'overview',
-          tags: ['Actionable Gamification', 'Yu-kai Chou', 'Ch 3', 'Question', 'overview'],
-          createdAt: Math.floor(Date.now() / 1000),
-        };
-        try { await saveNote(demo); } catch {}
-      }
-      setSeeded(true);
-      await refresh();
-    })();
-  }, [seeded]);
-
-  const books = useMemo(() => Array.from(new Set(items.map(i => i.bookTitle).filter(Boolean))) as string[], [items]);
 
   async function handleSave() {}
 
@@ -100,25 +72,29 @@ export const NotesScreen: React.FC = () => {
           ListHeaderComponent={header}
           ListHeaderComponentStyle={{ paddingHorizontal: 0, marginBottom: 16 }}
           contentContainerStyle={{ paddingBottom: 24 }}
-          renderItem={({ item, index }) => (
-            <View>
-              {(index === 0 || items[index - 1]?.bookTitle !== item.bookTitle) && (
-                <Text style={styles.bookHeader}>{item.bookTitle}</Text>
-              )}
+          renderItem={({ item }) => {
+            const title = item.topic ?? item.question_type ?? 'Note';
+            const body = item.content;
+            const createdAt = item.created_at ? Math.floor(new Date(item.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000);
+            const chapterNumber = (() => {
+              const m = (item.chapter ?? '').match(/\d+/);
+              return m ? Number(m[0]) : undefined;
+            })();
+            return (
               <View style={{ paddingHorizontal: 16 }}>
                 <NoteCard
                   id={item.id}
-                  title={item.question}
-                  body={item.answer}
-                  createdAt={item.createdAt}
-                  chapterNumber={item.chapterNumber}
+                  title={title}
+                  body={body}
+                  createdAt={createdAt}
+                  chapterNumber={chapterNumber}
                   selected={!!selected[item.id]}
                   onLongPress={() => toggleSelect(item.id)}
                   onPress={() => {}}
                 />
               </View>
-            </View>
-          )}
+            );
+          }}
         />
         {/* Editor disabled for auto-saved Q&A notes; keep component available if needed later */}
       </SafeAreaView>

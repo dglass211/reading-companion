@@ -1,6 +1,5 @@
 import Vapi from '@vapi-ai/react-native';
-import { getCurrentBook } from '../data/booksDal';
-import { saveNote, SavedNote } from '../db/notes';
+import { listBooks, saveVapiNote } from '../data/db';
 import { useVoiceStore } from '../store/useVoiceStore';
 
 export type VapiEvent = 'call-start' | 'call-end' | 'volume-level' | 'error' | 'call-start-progress';
@@ -13,6 +12,12 @@ if (!apiKey) {
 }
 
 const vapi = new Vapi(apiKey ?? '');
+
+// Helper to get the current book (first book in the library)
+async function getCurrentBook() {
+  const books = await listBooks();
+  return books[0] ?? null;
+}
 
 interface StartContext {
   bookTitle?: string | null;
@@ -159,6 +164,45 @@ export async function startCall(context: StartContext = {}) {
   let bufferedUserText = '';
   let lastTurnSeen = -1;
   let hasAnyFinalThisTurn = false;
+  let finalSaveTimer: any = null;
+
+  async function flushSave(via: string) {
+    const store = useVoiceStore.getState();
+    const pending = store.pendingQuestion;
+    if (!pending || !pending.text.trim()) {
+      try { console.log('[Vapi pairing] flush skipped (no pending) via', via); } catch {}
+      return;
+    }
+    if (!bufferedUserText.trim()) {
+      try { console.log('[Vapi pairing] flush skipped (no buffered final) via', via); } catch {}
+      return;
+    }
+    const cur = await getCurrentBook().catch(() => null);
+    if (!cur) { try { console.log('[Vapi pairing] no current book; cannot save'); } catch {}; return; }
+    const note = {
+      bookId: cur.id,
+      bookTitle: cur.title,
+      author: cur.author ?? '',
+      chapterNumber: store.chapter,
+      question: pending.text,
+      answer: bufferedUserText.trim(),
+      questionType: pending.questionType,
+      topic: pending.topic,
+      tags: buildTags({ bookTitle: cur.title, author: cur.author ?? '', chapterNumber: store.chapter, questionType: pending.questionType, topic: pending.topic }),
+    };
+    try {
+      await saveVapiNote(note);
+      try { console.log('note_saved', { bookId: note.bookId, via }); } catch {}
+    } catch (e) {
+      const msgStr = String((e as any)?.message ?? e ?? '');
+      try { console.log('note_save_error', msgStr); } catch {}
+    }
+    store.clearPendingQuestion();
+    store.incrementTurnIndex();
+    bufferedUserText = '';
+    hasAnyFinalThisTurn = false;
+    lastFinalAt = 0;
+  }
 
   // Helper extractors and centralized handler with detailed logs
   const getRole = (msg: any): string => {
@@ -222,6 +266,10 @@ export async function startCall(context: StartContext = {}) {
       }
       lastFinalAt = now;
       hasAnyFinalThisTurn = true;
+
+      // Save also on final (debounced) because some SDKs emit speech-stopped before finals
+      if (finalSaveTimer) { try { clearTimeout(finalSaveTimer); } catch {} }
+      finalSaveTimer = setTimeout(() => { flushSave('final-debounce'); }, 600);
     }
   }
 
@@ -240,48 +288,11 @@ export async function startCall(context: StartContext = {}) {
   // If SDK exposes explicit end-of-user-speech, use it to flush buffered partials
   vapi.on('user-speech-stopped' as any, async () => {
     try {
-      const store = useVoiceStore.getState();
-      const pending = store.pendingQuestion;
-      if (!pending || !pending.text.trim()) {
-        console.log('[Vapi pairing] speech-stopped but no pending; skip');
-        return;
-      }
-      if (!hasAnyFinalThisTurn || !bufferedUserText.trim()) {
-        console.log('[Vapi pairing] speech-stopped but no finals buffered; skip');
-        return;
-      }
-      const cur = await getCurrentBook().catch(() => null);
-      if (!cur) { console.log('[Vapi pairing] no current book; cannot save'); return; }
-      const note: SavedNote = {
-        id: uid(),
-        conversationId: store.currentConversationId ?? undefined,
-        turnIndex: store.turnIndex,
-        bookId: cur.id,
-        bookTitle: cur.title,
-        author: cur.author ?? '',
-        chapterNumber: store.chapter,
-        question: pending.text,
-        answer: bufferedUserText.trim(),
-        questionType: pending.questionType,
-        topic: pending.topic,
-        tags: buildTags({ bookTitle: cur.title, author: cur.author ?? '', chapterNumber: store.chapter, questionType: pending.questionType, topic: pending.topic }),
-        createdAt: Math.floor(Date.now() / 1000),
-      };
-      try {
-        await saveNote(note);
-        console.log('note_saved', { id: note.id, turn: note.turnIndex });
-      } catch (e) {
-        const msgStr = String((e as any)?.message ?? e ?? '');
-        if (msgStr.includes('UNIQUE') || msgStr.includes('unique')) console.log('note_deduped');
-        else console.log('note_save_error', msgStr);
-      }
-      store.clearPendingQuestion();
-      store.incrementTurnIndex();
+      if (finalSaveTimer) { try { clearTimeout(finalSaveTimer); } catch {} finalSaveTimer = null; }
+      if (!hasAnyFinalThisTurn) { try { console.log('[Vapi pairing] speech-stopped without finals; skip'); } catch {} ; return; }
+      await flushSave('speech-stopped');
     } finally {
-      // reset buffer for next turn
-      bufferedUserText = '';
-      hasAnyFinalThisTurn = false;
-      lastFinalAt = 0;
+      // no-op (flushSave resets state)
     }
   });
 
@@ -292,10 +303,7 @@ export async function startCall(context: StartContext = {}) {
       if (store.pendingQuestion && bufferedUserText.trim()) {
         const cur = await getCurrentBook().catch(() => null);
         if (!cur) return;
-        const note: SavedNote = {
-          id: uid(),
-          conversationId: store.currentConversationId ?? undefined,
-          turnIndex: store.turnIndex,
+        const note = {
           bookId: cur.id,
           bookTitle: cur.title,
           author: cur.author ?? '',
@@ -305,10 +313,9 @@ export async function startCall(context: StartContext = {}) {
           questionType: store.pendingQuestion.questionType,
           topic: store.pendingQuestion.topic,
           tags: buildTags({ bookTitle: cur.title, author: cur.author ?? '', chapterNumber: store.chapter, questionType: store.pendingQuestion.questionType, topic: store.pendingQuestion.topic }),
-          createdAt: Math.floor(Date.now() / 1000),
         };
-        await saveNote(note);
-        console.log('note_saved', { id: note.id, turn: note.turnIndex, via: 'call-end' });
+        await saveVapiNote(note);
+        console.log('note_saved', { bookId: note.bookId, via: 'call-end' });
       }
     } catch {}
   });

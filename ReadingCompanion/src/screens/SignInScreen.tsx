@@ -30,6 +30,7 @@ export default function SignInScreen() {
       const u = await signInWithApple();
       setUser(u);
     } catch (e: any) {
+
       Alert.alert('Apple Sign In', e?.message ?? 'Something went wrong');
     } finally {
       setBusy(null);
@@ -42,6 +43,7 @@ export default function SignInScreen() {
       const u = await signInWithGoogle();
       setUser(u);
     } catch (e: any) {
+
       Alert.alert('Google Sign In', e?.message ?? 'Something went wrong');
     } finally {
       setBusy(null);

@@ -1,12 +1,15 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, Text, View, Image, Pressable } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import LinenBackground from '../components/LinenBackground';
 import { theme } from '../theme';
 import { useVoiceStore } from '../store/useVoiceStore';
 import { Visualizer } from '../components/voice/Visualizer';
 import { IconMic } from '../components/icons/TabIcons';
 import { MiniToast } from '../components/voice/Toast';
+import { listBooks } from '../data/db';
 
 export const VoiceScreen: React.FC = () => {
   const {
@@ -20,7 +23,21 @@ export const VoiceScreen: React.FC = () => {
     stopRecording,
     levels,
     status,
+    setBook,
   } = useVoiceStore();
+
+  // Load current book when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const books = await listBooks();
+        const current = books[0];
+        if (current) {
+          setBook(current.title, current.author ?? null);
+        }
+      })();
+    }, [setBook])
+  );
 
   const onMicPress = async () => {
     if (isRecording) await stopRecording();
