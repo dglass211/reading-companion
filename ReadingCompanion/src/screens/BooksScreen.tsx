@@ -5,21 +5,21 @@ import LinenBackground from '../components/LinenBackground';
 import { theme } from '../theme';
 import { BookListItem } from '../components/BookListItem';
 import { SectionCard } from '../components/SectionCard';
-import { getCurrentBook, listBooks, removeBook, setCurrentBook } from '../data/booksDal';
+// Switch to Supabase DAL
+import { listBooks as listBooksRemote, deleteBook as deleteBookRemote, Book } from '../data/db';
 import { IconPlus, IconReplace } from '../components/icons/TabIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 
 export const BooksScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const [library, setLibrary] = useState<any[]>([]);
-  const [current, setCurrent] = useState<any | null>(null);
+  const [library, setLibrary] = useState<Book[]>([]);
+  const [current, setCurrent] = useState<Book | null>(null);
 
   async function refreshBooks() {
-    const items = await listBooks();
+    const items = await listBooksRemote();
     setLibrary(items);
-    const cur = await getCurrentBook();
-    setCurrent(cur);
+    setCurrent(items[0] ?? null); // simple current book placeholder
   }
 
   useEffect(() => {
@@ -39,11 +39,10 @@ export const BooksScreen: React.FC = () => {
         text: 'Remove',
         style: 'destructive',
         onPress: async () => {
-          await removeBook(id);
-          const items = await listBooks();
+          await deleteBookRemote(id);
+          const items = await listBooksRemote();
           setLibrary(items);
-          const cur = await getCurrentBook();
-          setCurrent(cur);
+          setCurrent(items[0] ?? null);
         },
       },
     ]);
@@ -78,8 +77,8 @@ export const BooksScreen: React.FC = () => {
                 {current ? (
                   <BookListItem
                     title={current.title}
-                    author={current.author}
-                    coverUrl={current.coverUrl}
+                    author={current.author ?? null}
+                    coverUrl={current.cover_url ?? null}
                     onLongPress={() => handleLongPress(current.id)}
                   />
                 ) : (
@@ -98,14 +97,10 @@ export const BooksScreen: React.FC = () => {
                 <BookListItem
                   key={item.id}
                   title={item.title}
-                  author={item.author}
-                  coverUrl={item.coverUrl}
+                  author={item.author ?? null}
+                  coverUrl={item.cover_url ?? null}
                   onLongPress={() => handleLongPress(item.id)}
-                  onPress={async () => {
-                    await setCurrentBook(item.id);
-                    const cur = await getCurrentBook();
-                    setCurrent(cur);
-                  }}
+                  onPress={() => setCurrent(item)}
                 />
               ))}
             </SectionCard>

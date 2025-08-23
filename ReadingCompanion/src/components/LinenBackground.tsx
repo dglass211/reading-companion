@@ -5,12 +5,13 @@ export default function LinenBackground({ children }: { children: React.ReactNod
   return (
     <View style={styles.container}>
       <View style={styles.base} />
-      <Image
-        source={require('../../assets/NoiseGrain.png')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-        pointerEvents="none"
-      />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Image
+          source={require('../../assets/NoiseGrain.png')}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        />
+      </View>
       {children}
     </View>
   );

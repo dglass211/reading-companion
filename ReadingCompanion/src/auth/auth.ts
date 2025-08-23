@@ -5,6 +5,7 @@
 import * as SecureStore from 'expo-secure-store';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as AuthSession from 'expo-auth-session';
+import { supabase } from '../lib/supabase';
 // Newer AuthSession prefers AuthRequest + promptAsync over the old startAsync
 
 // ---- Types
@@ -56,11 +57,36 @@ export async function signInWithApple(): Promise<User> {
   // Apple can include an identityToken (JWT) → useful for backend verification
   const idToken = credential.identityToken ?? undefined;
 
+  // Create Supabase session from Apple identity token
+  if (idToken) {
+    const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken });
+    if (error) {
+      throw new Error(`Supabase Apple sign-in failed: ${error.message}`);
+    }
+    const { data: sess } = await supabase.auth.getSession();
+    const supabaseUserId = sess.session?.user?.id;
+    
+    if (supabaseUserId) {
+      // Use Supabase UUID for consistency
+      const user: User = {
+        id: supabaseUserId, // Use Supabase UUID instead of Apple user ID
+        name: fullName ?? null,
+        email: credential.email ?? null,
+        avatarUrl: null, // Apple doesn't provide avatar
+        provider: 'apple',
+        idToken,
+      };
+      await saveUser(user);
+      return user;
+    }
+  }
+
+  // Fallback if no Supabase session (shouldn't happen)
   const user: User = {
     id: appleId,
     name: fullName ?? null,
     email: credential.email ?? null,
-    avatarUrl: null, // Apple doesn't provide avatar
+    avatarUrl: null,
     provider: 'apple',
     idToken,
   };
@@ -89,6 +115,10 @@ export async function signInWithGoogle(): Promise<User> {
     responseType: AuthSession.ResponseType.Code, // Use code + PKCE for iOS client
     usePKCE: true,
     scopes: ['openid', 'email', 'profile'],
+    extraParams: {
+      access_type: 'offline', // Request refresh token
+      prompt: 'consent', // Force consent to get refresh token
+    },
   });
   await request.makeAuthUrlAsync(discovery);
   const result = await request.promptAsync(discovery);
@@ -108,10 +138,23 @@ export async function signInWithGoogle(): Promise<User> {
     discovery
   );
 
-  const idToken: string = String((tokenResponse as any).id_token ?? '');
 
-  // Decode minimal fields from the JWT payload for display (NO security—just UI)
-  // We avoid adding dependencies; best-effort base64url decode if possible.
+  // Try multiple possible locations for the ID token
+  const idToken: string = String(
+    (tokenResponse as any).id_token ?? 
+    (tokenResponse as any).idToken ?? 
+    (tokenResponse as any).id_Token ?? 
+    ''
+  );
+
+
+  if (!idToken || idToken === '') {
+    console.error('[Auth] No ID token received from Google OAuth');
+    console.log('[Auth] Full token response for debugging:', tokenResponse);
+    throw new Error('Google sign-in succeeded but no ID token was received. Please check OAuth configuration.');
+  }
+
+  // Helper to decode JWT payload
   function base64UrlDecode(input: string): string | null {
     try {
       const base64 = input.replace(/-/g, '+').replace(/_/g, '/');
@@ -128,6 +171,7 @@ export async function signInWithGoogle(): Promise<User> {
     }
   }
 
+  // Decode user info from the ID token for display
   let name: string | null | undefined;
   let email: string | null | undefined;
   let avatarUrl: string | null | undefined;
@@ -141,20 +185,26 @@ export async function signInWithGoogle(): Promise<User> {
       avatarUrl = (data.picture as string | undefined) ?? null;
     }
   } catch {
-    // Swallow decoding issues; we still return an id-only user
+    // Swallow decoding issues
   }
 
-  const sub = (() => {
-    try {
-      const payload = idToken.split('.')[1] ?? '';
-      const json = base64UrlDecode(payload);
-      if (json) return (JSON.parse(json).sub as string) ?? 'unknown';
-    } catch {}
-    return 'unknown';
-  })();
+  // Create Supabase session from Google ID token
+  const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken });
+  if (error) {
+    throw new Error(`Supabase Google sign-in failed: ${error.message}`);
+  }
+  
+  // Get the Supabase user ID (not the Google sub)
+  const { data: sess } = await supabase.auth.getSession();
+  const supabaseUserId = sess.session?.user?.id;
+  
+  if (!supabaseUserId) {
+    throw new Error('Supabase session created but no user ID found');
+  }
 
+  // Return user with Supabase UUID instead of Google sub
   const user: User = {
-    id: sub,
+    id: supabaseUserId, // Use Supabase UUID for consistency
     name: name ?? null,
     email: email ?? null,
     avatarUrl: avatarUrl ?? null,
