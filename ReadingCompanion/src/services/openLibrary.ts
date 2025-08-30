@@ -45,3 +45,29 @@ export async function searchBooks(query: string): Promise<BookSearchResult[]> {
     } as BookSearchResult;
   });
 }
+
+export async function getPopularBooks(): Promise<BookSearchResult[]> {
+  // Search for popular non-fiction books
+  const url = `https://openlibrary.org/search.json?q=subject:nonfiction&sort=rating&limit=20`;
+  try {
+    const { data } = await axios.get(url, { timeout: 10000 });
+    const docs: OpenLibDoc[] = data.docs ?? [];
+    return docs.map((d) => {
+      const isbn = firstIsbn(d.isbn);
+      const id = isbn ?? d.key;
+      const coverUrl = isbn
+        ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false`
+        : d.cover_i
+        ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg?default=false`
+        : null;
+      return {
+        id,
+        title: d.title,
+        author: d.author_name?.[0] ?? null,
+        coverUrl,
+      } as BookSearchResult;
+    });
+  } catch {
+    return [];
+  }
+}

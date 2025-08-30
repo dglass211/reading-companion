@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { BooksScreen } from '../screens/BooksScreen';
 import { VoiceScreen } from '../screens/VoiceScreen';
 import { NotesScreen } from '../screens/NotesScreen';
@@ -10,7 +10,8 @@ import { AddBookScreen } from '../screens/AddBookScreen';
 import { theme } from '../theme';
 import { IconBooks, IconMic, IconNotes, IconProfile } from '../components/icons/TabIcons';
 import { useAuth } from '../auth/AuthContext';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import LinenBackground from '../components/LinenBackground';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -131,16 +132,64 @@ export function RootNavigation() {
 function AccountScreen() {
   const { user, signOut } = useAuth();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: theme.colors.textPrimary, marginBottom: 12 }}>
-        {user ? `Signed in as ${user.email ?? user.name ?? user.id}` : 'Not signed in'}
-      </Text>
-      <Pressable
-        onPress={signOut}
-        style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 8 }}
-      >
-        <Text style={{ color: '#333' }}>Sign out</Text>
-      </Pressable>
-    </View>
+    <LinenBackground>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: '#0C223B' }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+        <View style={{ backgroundColor: '#0C223B' }}>
+          <View style={{
+            paddingHorizontal: 16,
+            paddingTop: 32,
+            paddingBottom: 12,
+            borderBottomLeftRadius: 12,
+            borderBottomRightRadius: 12,
+          }}>
+            <Text style={{
+              color: theme.colors.textPrimary,
+              fontSize: 22,
+              fontWeight: '800',
+            }}>Account</Text>
+          </View>
+        </View>
+        
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 32 }}>
+          <View style={{
+            backgroundColor: 'rgba(255,255,255,0.07)',
+            borderRadius: 16,
+            padding: 20,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: theme.colors.border,
+          }}>
+            <Text style={{ 
+              color: theme.colors.textSecondary, 
+              fontSize: 14,
+              marginBottom: 8 
+            }}>
+              Signed in as
+            </Text>
+            <Text style={{ 
+              color: theme.colors.textPrimary, 
+              fontSize: 18,
+              fontWeight: '600',
+              marginBottom: 20 
+            }}>
+              {user?.email ?? user?.name ?? 'User'}
+            </Text>
+            
+            <Pressable
+              onPress={signOut}
+              style={({ pressed }) => [{
+                paddingHorizontal: 24,
+                paddingVertical: 12,
+                backgroundColor: '#66A0C8',
+                borderRadius: 24,
+                alignSelf: 'flex-start',
+              }, pressed && { opacity: 0.85 }]}
+            >
+              <Text style={{ color: '#fff', fontWeight: '600' }}>Sign out</Text>
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
+    </LinenBackground>
   );
 }

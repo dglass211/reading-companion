@@ -15,6 +15,7 @@ export const BooksScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [library, setLibrary] = useState<Book[]>([]);
   const [current, setCurrent] = useState<Book | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   async function refreshBooks() {
     const items = await listBooksRemote();
@@ -69,8 +70,8 @@ export const BooksScreen: React.FC = () => {
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionCardTitle}>current book</Text>
                   {current && (
-                    <Pressable onPress={() => navigation.navigate('AddBook')} hitSlop={8} style={styles.replaceInlineBtn}>
-                      <IconReplace size={22} color="#66A0C8" />
+                    <Pressable onPress={() => setIsSelecting(!isSelecting)} hitSlop={8} style={styles.replaceInlineBtn}>
+                      <IconReplace size={22} color={isSelecting ? "#94C4E0" : "#66A0C8"} />
                     </Pressable>
                   )}
                 </View>
@@ -100,7 +101,18 @@ export const BooksScreen: React.FC = () => {
                   author={item.author ?? null}
                   coverUrl={item.cover_url ?? null}
                   onLongPress={() => handleLongPress(item.id)}
-                  onPress={() => setCurrent(item)}
+                  onPress={() => {
+                    if (isSelecting) {
+                      setCurrent(item);
+                      setIsSelecting(false);
+                    }
+                  }}
+                  right={isSelecting ? (
+                    <View style={[
+                      styles.selectionCircle,
+                      current?.id === item.id && styles.selectionCircleActive
+                    ]} />
+                  ) : undefined}
                 />
               ))}
             </SectionCard>
@@ -141,4 +153,16 @@ const styles = StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   replaceInlineBtn: { padding: 4 },
   cardWrap: { position: 'relative' },
+  selectionCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#66A0C8',
+    backgroundColor: 'transparent',
+  },
+  selectionCircleActive: {
+    backgroundColor: '#66A0C8',
+    borderColor: '#66A0C8',
+  },
 });
