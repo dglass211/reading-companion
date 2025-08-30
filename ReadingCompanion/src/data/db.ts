@@ -122,6 +122,12 @@ export async function saveVapiNote(n: {
   topic?: string;
   tags: string[];
 }): Promise<void> {
+  // Dynamically import tag generator to avoid circular dependencies
+  const { generateTags } = await import('../services/tagGenerator');
+  
+  // Generate AI tags
+  const aiTags = await generateTags(n.question, n.answer);
+  
   // Convert from Vapi format to Supabase format
   const noteData = {
     book_id: n.bookId,
@@ -130,7 +136,7 @@ export async function saveVapiNote(n: {
     topic: n.topic ?? null,
     // Combine Q&A into content field
     content: `Q: ${n.question}\n\nA: ${n.answer}`,
-    tags: n.tags,
+    tags: aiTags.length > 0 ? aiTags : n.tags,
   };
   
   await createNote(noteData);

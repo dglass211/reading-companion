@@ -73,8 +73,14 @@ export const NotesScreen: React.FC = () => {
           ListHeaderComponentStyle={{ paddingHorizontal: 0, marginBottom: 16 }}
           contentContainerStyle={{ paddingBottom: 24 }}
           renderItem={({ item }) => {
-            const title = item.topic ?? item.question_type ?? 'Note';
-            const body = item.content;
+            // Extract question from content (format: "Q: question\n\nA: answer")
+            const questionMatch = item.content.match(/^Q:\s*(.+?)(?:\n|$)/);
+            const question = questionMatch ? questionMatch[1] : (item.topic ?? item.question_type ?? 'Note');
+            
+            // Extract answer from content
+            const answerMatch = item.content.match(/A:\s*([\s\S]+)/);
+            const answer = answerMatch ? answerMatch[1] : item.content;
+            
             const createdAt = item.created_at ? Math.floor(new Date(item.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000);
             const chapterNumber = (() => {
               const m = (item.chapter ?? '').match(/\d+/);
@@ -84,13 +90,14 @@ export const NotesScreen: React.FC = () => {
               <View style={{ paddingHorizontal: 16 }}>
                 <NoteCard
                   id={item.id}
-                  title={title}
-                  body={body}
+                  title={question}
+                  body={answer}
                   createdAt={createdAt}
                   chapterNumber={chapterNumber}
                   selected={!!selected[item.id]}
                   onLongPress={() => toggleSelect(item.id)}
                   onPress={() => {}}
+                  tags={item.tags}
                 />
               </View>
             );

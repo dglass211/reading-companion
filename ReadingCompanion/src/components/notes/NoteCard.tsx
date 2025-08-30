@@ -11,6 +11,7 @@ export interface NoteCardProps {
   selected?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
+  tags?: string[];
 }
 
 function formatDate(ts: number): string {
@@ -22,14 +23,17 @@ function formatDate(ts: number): string {
   }
 }
 
-export const NoteCard: React.FC<NoteCardProps> = ({ id, title, body, createdAt, chapterNumber, selected, onPress, onLongPress }) => {
+export const NoteCard: React.FC<NoteCardProps> = ({ id, title, body, createdAt, chapterNumber, selected, onPress, onLongPress, tags }) => {
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }, selected && styles.selected] }>
-      <Text style={styles.title} numberOfLines={1}>{title}</Text>
-      <Text style={styles.body} numberOfLines={6}>{body}</Text>
+      <Text style={styles.title} numberOfLines={2}>{title}</Text>
+      <Text style={styles.body} numberOfLines={4}>{body}</Text>
       <View style={styles.chipsRow}>
         <Text style={styles.chip}>{formatDate(createdAt)}</Text>
         {chapterNumber != null && <Text style={styles.chip}>{`Ch ${chapterNumber}`}</Text>}
+        {tags && tags.map((tag, index) => (
+          <Text key={index} style={[styles.chip, styles.tagChip]}>{tag}</Text>
+        ))}
       </View>
     </Pressable>
   );
@@ -60,5 +64,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     fontSize: 12,
+  },
+  tagChip: {
+    backgroundColor: 'rgba(102, 160, 200, 0.2)',
   },
 });

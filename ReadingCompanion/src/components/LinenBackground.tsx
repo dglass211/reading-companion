@@ -7,7 +7,7 @@ export default function LinenBackground({ children }: { children: React.ReactNod
       <View style={styles.base} />
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <Image
-          source={require('../../assets/NoiseGrain.png')}
+          source={require('../../assets/NavyNoiseGrainSmall.png')}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
         />
