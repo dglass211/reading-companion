@@ -8,7 +8,7 @@ export const SectionCard: React.FC<{ children?: React.ReactNode }> = ({ children
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: '#0F2845',
     borderRadius: 16,
     padding: 16,
     borderWidth: StyleSheet.hairlineWidth,

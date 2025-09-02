@@ -20,11 +20,11 @@ export default function OnboardingPurpose2({ navigation }: { navigation: any }) 
   useEffect(() => {
     const animations = lines.map((_, i) =>
       Animated.parallel([
-        Animated.timing(opacities[i]!, { toValue: 1, duration: 600, easing: Easing.out(Easing.ease), useNativeDriver: true, delay: i * 400 }),
-        Animated.timing(offsets[i]!, { toValue: 0, duration: 600, easing: Easing.out(Easing.ease), useNativeDriver: true, delay: i * 400 }),
+        Animated.timing(opacities[i]!, { toValue: 1, duration: 780, easing: Easing.out(Easing.ease), useNativeDriver: true, delay: i * 520 }),
+        Animated.timing(offsets[i]!, { toValue: 0, duration: 780, easing: Easing.out(Easing.ease), useNativeDriver: true, delay: i * 520 }),
       ])
     );
-    Animated.stagger(200, animations).start();
+    Animated.stagger(260, animations).start();
   }, [lines, opacities, offsets]);
 
   async function finish() {
@@ -52,7 +52,7 @@ export default function OnboardingPurpose2({ navigation }: { navigation: any }) 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 44 },
   content: { flex: 1, justifyContent: 'center' },
-  line: { color: '#FFFFFF', fontSize: 18, lineHeight: 18 + 24, marginBottom: 12 },
+  line: { color: '#FFFFFF', fontSize: 18, lineHeight: 18 + 24, marginBottom: 24 },
   cta: {
     alignSelf: 'center',
     backgroundColor: '#6EA8CE',

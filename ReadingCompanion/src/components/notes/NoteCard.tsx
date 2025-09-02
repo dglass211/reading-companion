@@ -29,19 +29,19 @@ export const NoteCard: React.FC<NoteCardProps> = ({ id, title, body, createdAt, 
       <Text style={styles.title} numberOfLines={2}>{title}</Text>
       <Text style={styles.body} numberOfLines={4}>{body}</Text>
       <View style={styles.chipsRow}>
-        <Text style={styles.chip}>{formatDate(createdAt)}</Text>
         {chapterNumber != null && <Text style={styles.chip}>{`Ch ${chapterNumber}`}</Text>}
         {tags && tags.map((tag, index) => (
           <Text key={index} style={[styles.chip, styles.tagChip]}>{tag}</Text>
         ))}
       </View>
+      <Text style={styles.date}>{formatDate(createdAt)}</Text>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: '#0F2845',
     borderRadius: 16,
     padding: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -67,5 +67,10 @@ const styles = StyleSheet.create({
   },
   tagChip: {
     backgroundColor: 'rgba(102, 160, 200, 0.2)',
+  },
+  date: {
+    color: theme.colors.textSecondary,
+    fontSize: 10,
+    marginTop: 8,
   },
 });
