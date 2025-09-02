@@ -71,7 +71,7 @@ export function Tabs() {
         name="Books"
         component={BooksStack}
         options={{
-          title: 'Books',
+          title: '',
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <IconBooks size={24} color={color} />
@@ -82,7 +82,7 @@ export function Tabs() {
         name="Voice"
         component={VoiceScreen}
         options={{
-          title: 'Voice',
+          title: '',
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <IconMic size={24} color={color} />
@@ -93,7 +93,7 @@ export function Tabs() {
         name="Notes"
         component={NotesScreen}
         options={{
-          title: 'Notes',
+          title: '',
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <IconNotes size={24} color={color} />
@@ -104,7 +104,7 @@ export function Tabs() {
         name="Account"
         component={AccountScreen}
         options={{
-          title: 'Account',
+          title: '',
           headerShown: false,
           tabBarIcon: ({ color }) => <IconProfile size={24} color={color} />,
         }}
@@ -153,7 +153,7 @@ function AccountScreen() {
         
         <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 32 }}>
           <View style={{
-            backgroundColor: 'rgba(255,255,255,0.07)',
+            backgroundColor: '#0F2845',
             borderRadius: 16,
             padding: 20,
             borderWidth: StyleSheet.hairlineWidth,

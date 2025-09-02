@@ -7,6 +7,7 @@ import { BookListItem } from '../components/BookListItem';
 import { SectionCard } from '../components/SectionCard';
 // Switch to Supabase DAL
 import { listBooks as listBooksRemote, deleteBook as deleteBookRemote, Book } from '../data/db';
+import { useBooksStore } from '../store/useBooksStore';
 import { IconPlus, IconReplace } from '../components/icons/TabIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -14,13 +15,16 @@ import { useCallback } from 'react';
 export const BooksScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [library, setLibrary] = useState<Book[]>([]);
-  const [current, setCurrent] = useState<Book | null>(null);
+  const { currentBook, setCurrentBook } = useBooksStore();
   const [isSelecting, setIsSelecting] = useState(false);
 
   async function refreshBooks() {
     const items = await listBooksRemote();
     setLibrary(items);
-    setCurrent(items[0] ?? null); // simple current book placeholder
+    // Only set current book if none is selected
+    if (!currentBook && items.length > 0) {
+      setCurrentBook(items[0]);
+    }
   }
 
   useEffect(() => {
@@ -43,7 +47,10 @@ export const BooksScreen: React.FC = () => {
           await deleteBookRemote(id);
           const items = await listBooksRemote();
           setLibrary(items);
-          setCurrent(items[0] ?? null);
+          // If we deleted the current book, select a new one
+          if (currentBook?.id === id) {
+            setCurrentBook(items[0] ?? null);
+          }
         },
       },
     ]);
@@ -69,18 +76,18 @@ export const BooksScreen: React.FC = () => {
               <SectionCard>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionCardTitle}>current book</Text>
-                  {current && (
+                  {currentBook && (
                     <Pressable onPress={() => setIsSelecting(!isSelecting)} hitSlop={8} style={styles.replaceInlineBtn}>
                       <IconReplace size={22} color={isSelecting ? "#94C4E0" : "#66A0C8"} />
                     </Pressable>
                   )}
                 </View>
-                {current ? (
+                {currentBook ? (
                   <BookListItem
-                    title={current.title}
-                    author={current.author ?? null}
-                    coverUrl={current.cover_url ?? null}
-                    onLongPress={() => handleLongPress(current.id)}
+                    title={currentBook.title}
+                    author={currentBook.author ?? null}
+                    coverUrl={currentBook.cover_url ?? null}
+                    onLongPress={() => handleLongPress(currentBook.id)}
                   />
                 ) : (
                   <Text style={styles.emptyText}>No current book</Text>
@@ -103,14 +110,14 @@ export const BooksScreen: React.FC = () => {
                   onLongPress={() => handleLongPress(item.id)}
                   onPress={() => {
                     if (isSelecting) {
-                      setCurrent(item);
+                      setCurrentBook(item);
                       setIsSelecting(false);
                     }
                   }}
                   right={isSelecting ? (
                     <View style={[
                       styles.selectionCircle,
-                      current?.id === item.id && styles.selectionCircleActive
+                      currentBook?.id === item.id && styles.selectionCircleActive
                     ]} />
                   ) : undefined}
                 />

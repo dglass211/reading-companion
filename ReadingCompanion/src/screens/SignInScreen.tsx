@@ -53,9 +53,6 @@ export default function SignInScreen() {
   return (
     <View style={{ flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ color: 'white', fontSize: 22, marginBottom: 16 }}>Welcome</Text>
-      <Text style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 28 }}>
-        Sign in to sync your books and notes across devices.
-      </Text>
 
       {Platform.OS === 'ios' && appleAvailable && (
         <AppleAuthentication.AppleAuthenticationButton
@@ -82,7 +79,7 @@ export default function SignInScreen() {
         }}
       >
         <Image
-          source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }}
+          source={require('../../assets/GoogleLogo.png')}
           style={{ width: 18, height: 18, marginRight: 8 }}
         />
         <Text style={{ color: '#333', fontSize: 15 }}>Sign in with Google</Text>

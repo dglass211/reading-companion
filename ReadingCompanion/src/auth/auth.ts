@@ -39,6 +39,15 @@ export async function signOut() {
 // ---- Sign in with Apple
 // NOTE: Requires Dev Client / EAS build (won't work in Expo Go).
 export async function signInWithApple(): Promise<User> {
+  // Suppress ManagedConfiguration warnings on simulators
+  const originalWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    if (args[0]?.includes?.('[ManagedConfiguration]')) {
+      return;
+    }
+    originalWarn(...args);
+  };
+  
   // Request full name & email on FIRST sign-in only (Apple sends them once)
   const credential = await AppleAuthentication.signInAsync({
     requestedScopes: [
@@ -46,6 +55,9 @@ export async function signInWithApple(): Promise<User> {
       AppleAuthentication.AppleAuthenticationScope.EMAIL,
     ],
   });
+  
+  // Restore original console.warn
+  console.warn = originalWarn;
 
   // Apple returns a stable "user" string for this bundleIdentifier
   const appleId = credential.user;
